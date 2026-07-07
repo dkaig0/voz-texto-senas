@@ -36,7 +36,7 @@ export default function SignPlayer({ text, autoPlay = true }) {
   if (!steps.length) {
     return (
       <div className="player-empty">
-        ✍️ Escribe o dicta algo y lo verás deletreado en señas.
+         Escribe o dicta algo y lo verás deletreado en señas.
       </div>
     )
   }
