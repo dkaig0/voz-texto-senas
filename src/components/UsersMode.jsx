@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
-import { loadUsers, createUser, updateUser, deleteUser } from '../lib/users.js'
+import {
+  loadUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  randomLegoFoto,
+} from '../lib/users.js'
 
-const EMPTY_FORM = { usuario: '', nombre: '', password: '' }
+const EMPTY_FORM = { usuario: '', nombre: '', password: '', foto: '' }
 
 // Modo Usuarios: CRUD completo (crear, leer, actualizar, eliminar) sobre
 // localStorage, con validaciones. `session` es el usuario con sesión activa.
@@ -32,7 +38,7 @@ export default function UsersMode({ session, onSessionUserChange }) {
 
   function startEdit(user) {
     setEditingId(user.id)
-    setForm({ usuario: user.usuario, nombre: user.nombre, password: '' })
+    setForm({ usuario: user.usuario, nombre: user.nombre, password: '', foto: user.foto || '' })
     setErrors([])
     setNotice(null)
     setConfirmDeleteId(null)
@@ -107,7 +113,7 @@ export default function UsersMode({ session, onSessionUserChange }) {
       }
 
       setEditingId(null)
-      setForm({ usuario, nombre, password })
+      setForm({ usuario, nombre, password, foto: randomLegoFoto() })
       setNotice(
         `Datos traídos de randomuser.me — contraseña propuesta: “${password}”. Revisa y pulsa “Crear usuario”.`
       )
@@ -192,6 +198,13 @@ export default function UsersMode({ session, onSessionUserChange }) {
             />
           </div>
 
+          {form.foto && (
+            <div className="avatar-preview-row">
+              <img className="avatar-preview" src={form.foto} alt="Foto de perfil propuesta" />
+              <span className="user-meta">Foto de perfil (set LEGO de randomuser.me)</span>
+            </div>
+          )}
+
           {errors.length > 0 && (
             <ul className="form-errors">
               {errors.map((err) => (
@@ -228,6 +241,13 @@ export default function UsersMode({ session, onSessionUserChange }) {
           <ul className="user-list">
             {users.map((u) => (
               <li key={u.id} className={'user-row' + (u.id === editingId ? ' editing' : '')}>
+                {u.foto ? (
+                  <img className="user-avatar" src={u.foto} alt="" loading="lazy" />
+                ) : (
+                  <span className="user-avatar fallback" aria-hidden="true">
+                    {u.usuario[0].toUpperCase()}
+                  </span>
+                )}
                 <div className="user-info">
                   <strong>
                     {u.usuario}

@@ -1,28 +1,31 @@
-# 🤟 Voz y Texto a Señas
+# Voz y Texto a Señas
 
 Aplicación web hecha con **React + Vite** que convierte **lenguaje normal (texto o
 voz en español) en lengua de señas**, deletreando el mensaje con el **abecedario
 dactilológico español** (27 letras, con Ñ) letra por letra.
 
-> ✅ **Sin claves de API, sin registro y sin backend.** Las imágenes de las señas
-> van empaquetadas en la app (dominio público) y el dictado por voz usa la API de
-> voz integrada en el navegador. Funciona offline (la voz necesita Chrome/Edge).
+> **Sin claves de API obligatorias, sin registro externo y sin backend.** Las
+> imágenes de las señas van empaquetadas en la app (dominio público) y el dictado
+> por voz usa la API de voz integrada en el navegador. Funciona offline (la voz
+> necesita Chrome/Edge).
 
-## ✨ Funcionalidades
+## Funcionalidades
 
-- **🔤 Traductor** — Escribe un texto **o díctalo por voz** (🎤, en español) y la
+- **Traductor** — Escribe un texto **o díctalo por voz** (en español) y la
   app lo reproduce en señas, animando cada letra. Incluye controles de
   reproducir/pausa, anterior/siguiente, velocidad (Lento/Normal/Rápido) y una
   tira con la palabra donde puedes saltar a cualquier letra.
-- **🅰️ Abecedario** — Referencia visual de las 27 señas dactilológicas
+- **Abecedario** — Referencia visual de las 27 señas dactilológicas
   españolas, incluida la **Ñ** (como la N, con un movimiento lateral). Las
   tildes no se signan (Á→A) y LL/RR/CH se deletrean con sus letras.
+- **Usuarios** — Inicio de sesión y CRUD completo de usuarios con Local
+  Storage, contraseñas cifradas y generación de usuarios desde una API externa.
 
 > Las imágenes son el **alfabeto manual de una mano** (dominio público), la base
 > del dactilológico español; la Ñ se indica con la N más su movimiento (tilde
 > animada).
 
-## 🤔 ¿Por qué deletreo y no un avatar que firma frases?
+## ¿Por qué deletreo y no un avatar que firma frases?
 
 Se investigaron las opciones de "texto/voz → señas":
 
@@ -35,7 +38,7 @@ No hay hoy una API **gratuita y estable** de avatar de señas. El **deletreo
 dactilológico** es la solución fiable, offline y educativa: sirve para cualquier
 palabra o nombre y es la base real con la que se enseña a comunicarse por señas.
 
-## 👤 Usuarios y CRUD (Local Storage)
+## Usuarios y CRUD (Local Storage)
 
 La app incluye **inicio de sesión** y un módulo de **gestión de usuarios** con
 CRUD completo persistido en `localStorage`:
@@ -54,54 +57,65 @@ CRUD completo persistido en `localStorage`:
   [`src/components/UsersMode.jsx`](src/components/UsersMode.jsx) (interfaz) y
   [`src/components/LoginForm.jsx`](src/components/LoginForm.jsx).
 
-### 🌐 API externa (randomuser.me)
+### API externa (randomuser.me)
 
-En la pestaña **Usuarios**, el botón **“Generar con API”** consume la API REST
+En la pestaña **Usuarios**, el botón **"Generar con API"** consume la API REST
 pública [randomuser.me](https://randomuser.me/) (`fetch` + `async/await`) para
-proponer un usuario nuevo con nombre español (`?nat=es`). Los datos externos se
-**sanean y validan** antes de usarse: el nombre de usuario se limpia de
-caracteres no permitidos, y si la contraseña generada no cumple las reglas se
-reemplaza por una segura generada localmente. Errores de red o respuestas
-inesperadas se muestran con mensajes claros (manejo de errores).
+proponer un usuario nuevo con nombre español (`?nat=es`). Cada usuario recibe
+además una **foto de perfil del set LEGO** de randomuser.me, visible en el
+formulario y en la lista de usuarios.
 
-## 🚀 Puesta en marcha
+Los datos externos se **sanean y validan** antes de usarse: el nombre de
+usuario se limpia de caracteres no permitidos, la foto solo se acepta si
+proviene del set LEGO de randomuser.me, y si la contraseña generada no cumple
+las reglas se reemplaza por una segura generada localmente. Errores de red o
+respuestas inesperadas se muestran con mensajes claros (manejo de errores).
+
+## Puesta en marcha
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abre <http://localhost:5173>. Escribe algo y pulsa **Signar**, o pulsa **🎤 Voz**
-y habla (concede permiso de micrófono; el dictado funciona en Chrome/Edge).
+Abre <http://localhost:5173>, entra con la cuenta demo (`test` / `test123`),
+escribe algo y pulsa **Signar**, o pulsa **Voz** y habla (concede permiso de
+micrófono; el dictado funciona en Chrome/Edge).
 
-## 🧩 Cómo funciona por dentro
+## Cómo funciona por dentro
 
 | Pieza | Qué hace |
 | --- | --- |
-| [`lib/alphabet.js`](src/lib/alphabet.js) | Empaqueta los 26 SVG y convierte texto → secuencia de señas (quita acentos, `ñ`→`n`). |
+| [`lib/alphabet.js`](src/lib/alphabet.js) | Empaqueta los SVG y convierte texto en secuencia de señas (27 letras con Ñ; quita acentos: Á→A). |
 | [`lib/useSpeechToText.js`](src/lib/useSpeechToText.js) | Dictado por voz con la Web Speech API (gratis, en el navegador). |
+| [`lib/storage.js`](src/lib/storage.js) | Lectura/escritura segura de JSON en localStorage (integridad). |
+| [`lib/users.js`](src/lib/users.js) | CRUD de usuarios, hash SHA-256 + salt, validaciones. |
 | [`components/SignPlayer.jsx`](src/components/SignPlayer.jsx) | Reproduce el deletreo letra por letra con controles. |
 | [`components/TranslatorMode.jsx`](src/components/TranslatorMode.jsx) | Entrada de texto/voz. |
 | [`components/AlphabetMode.jsx`](src/components/AlphabetMode.jsx) | Referencia del abecedario. |
-| [`assets/asl/`](src/assets/asl/) | 26 señas en SVG (dominio público). |
+| [`components/UsersMode.jsx`](src/components/UsersMode.jsx) | CRUD de usuarios + consumo de la API randomuser.me. |
+| [`components/LoginForm.jsx`](src/components/LoginForm.jsx) | Inicio de sesión con validación. |
+| [`assets/asl/`](src/assets/asl/) | Señas del abecedario en SVG (dominio público). |
 
-## 📦 Scripts
+## Scripts
 
 - `npm run dev` — servidor de desarrollo.
 - `npm run build` — build de producción en `dist/`.
 - `npm run preview` — sirve el build de producción.
 
-## 🔭 Cómo ampliarlo
+## Cómo ampliarlo
 
 - **Señas de palabras completas**: añadir un diccionario `palabra → GIF/vídeo`
   (p. ej. saludos comunes) y usar el deletreo solo como *fallback* para lo que no
   esté en el diccionario. Es justo como funcionan los traductores de señas serios.
-- **Lengua de Señas Española (LSE/LSM)**: sustituir el set de imágenes por el
-  abecedario dactilológico español y añadir `ñ`, `ll`, etc.
-- **Avatar 3D**: si en el futuro consigues acceso a Sign-Speak o a otra API de
-  producción, el reproductor se puede cambiar por un `<video>` del avatar.
+- **Dictado local con IA**: integrar Whisper (transformers.js) para que la voz
+  funcione también en navegadores que bloquean el dictado en línea (Brave,
+  Firefox).
+- **Avatar 3D**: si en el futuro se consigue acceso a Sign-Speak o a otra API de
+  producción de señas, el reproductor se puede cambiar por un `<video>` del avatar.
 
-## 📄 Créditos
+## Créditos
 
-Señas del abecedario: **wpclipart.com** (dominio público), vía
-[Wikimedia Commons — Categoría “ASL letters”](https://commons.wikimedia.org/wiki/Category:ASL_letters).
+- Señas del abecedario: **wpclipart.com** (dominio público), vía
+  [Wikimedia Commons — Categoría "ASL letters"](https://commons.wikimedia.org/wiki/Category:ASL_letters).
+- Datos y fotos de perfil (set LEGO): [randomuser.me](https://randomuser.me/).

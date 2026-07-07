@@ -41,6 +41,21 @@ export async function hashPassword(password, salt) {
   return sha256Hex(`${salt}:${password}`)
 }
 
+/* ------------------------- foto de perfil ------------------------- */
+
+// Avatares LEGO de randomuser.me (existen los índices 0 a 9).
+const LEGO_FOTO_RE = /^https:\/\/randomuser\.me\/api\/portraits\/lego\/\d\.jpg$/
+
+export function randomLegoFoto() {
+  return `https://randomuser.me/api/portraits/lego/${Math.floor(Math.random() * 10)}.jpg`
+}
+
+// Solo aceptamos fotos del set LEGO de randomuser.me; cualquier otra URL
+// se descarta (no confiamos en datos externos sin validar).
+function safeFoto(foto) {
+  return LEGO_FOTO_RE.test(foto || '') ? foto : randomLegoFoto()
+}
+
 /* ------------------------- validaciones ------------------------- */
 
 const USERNAME_RE = /^[a-zA-Z0-9ñÑ._-]{3,20}$/
@@ -85,6 +100,7 @@ export async function seedDefaultUser() {
       id: crypto.randomUUID(),
       usuario: 'test',
       nombre: 'Usuario de prueba',
+      foto: randomLegoFoto(),
       salt,
       hash: await hashPassword('test123', salt),
       creadoEl: new Date().toISOString(),
@@ -95,7 +111,7 @@ export async function seedDefaultUser() {
 }
 
 // CREATE — devuelve { ok, errors?, user? }
-export async function createUser({ usuario, nombre, password }) {
+export async function createUser({ usuario, nombre, password, foto }) {
   const errors = validateUserInput({ usuario, nombre, password })
   const users = loadUsers()
   const u = (usuario || '').trim()
@@ -109,6 +125,7 @@ export async function createUser({ usuario, nombre, password }) {
     id: crypto.randomUUID(),
     usuario: u,
     nombre: (nombre || '').trim(),
+    foto: safeFoto(foto),
     salt,
     hash: await hashPassword(password, salt),
     creadoEl: new Date().toISOString(),
