@@ -12,6 +12,7 @@ export default function UsersMode({ session, onSessionUserChange }) {
   const [errors, setErrors] = useState([])
   const [notice, setNotice] = useState(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [apiLoading, setApiLoading] = useState(false)
 
   // READ: carga inicial desde localStorage.
   useEffect(() => {
@@ -80,6 +81,45 @@ export default function UsersMode({ session, onSessionUserChange }) {
     if (editingId === user.id) startCreate()
   }
 
+  // Consume la API externa randomuser.me para proponer un usuario nuevo.
+  // La respuesta rellena el formulario y pasa por las MISMAS validaciones
+  // que un usuario escrito a mano.
+  async function handleGenerateFromApi() {
+    setApiLoading(true)
+    setErrors([])
+    setNotice(null)
+    try {
+      const res = await fetch('https://randomuser.me/api/?nat=es&inc=name,login&noinfo')
+      if (!res.ok) throw new Error(`la API respondió HTTP ${res.status}`)
+      const data = await res.json()
+      const r = data?.results?.[0]
+      if (!r?.login?.username) throw new Error('respuesta inesperada de la API')
+
+      // Saneamos los datos externos antes de usarlos (nunca confiar a ciegas).
+      const usuario = r.login.username.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 20)
+      const nombre = [r.name?.first, r.name?.last].filter(Boolean).join(' ').slice(0, 40)
+
+      // Si la contraseña generada no cumple nuestras reglas, creamos una segura.
+      let password = r.login.password || ''
+      if (password.length < 6 || password.length > 30) {
+        const bytes = crypto.getRandomValues(new Uint8Array(4))
+        password = 'Api-' + [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
+      }
+
+      setEditingId(null)
+      setForm({ usuario, nombre, password })
+      setNotice(
+        `Datos traídos de randomuser.me — contraseña propuesta: “${password}”. Revisa y pulsa “Crear usuario”.`
+      )
+    } catch (e) {
+      setErrors([
+        `No se pudo consultar randomuser.me (${e?.message || e}). Revisa tu conexión a internet.`,
+      ])
+    } finally {
+      setApiLoading(false)
+    }
+  }
+
   function formatDate(iso) {
     try {
       return new Date(iso).toLocaleDateString('es', {
@@ -95,9 +135,22 @@ export default function UsersMode({ session, onSessionUserChange }) {
   return (
     <div className="users">
       <section className="panel">
-        <h2 className="panel-title">
-          {editingId ? 'Editar usuario' : 'Nuevo usuario'}
-        </h2>
+        <div className="panel-head">
+          <h2 className="panel-title">
+            {editingId ? 'Editar usuario' : 'Nuevo usuario'}
+          </h2>
+          {!editingId && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={handleGenerateFromApi}
+              disabled={apiLoading}
+              title="Trae nombre y usuario desde la API externa randomuser.me"
+            >
+              {apiLoading ? 'Consultando API…' : 'Generar con API'}
+            </button>
+          )}
+        </div>
 
         <form onSubmit={handleSubmit} className="user-form" noValidate>
           <div className="field">

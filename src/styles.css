@@ -332,6 +332,13 @@ code {
 
 /* ---------- Sesión / usuarios (CRUD) ---------- */
 .session-box { display: flex; align-items: center; gap: 10px; }
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .session-user { color: var(--muted); font-weight: 600; font-size: 0.9rem; }
 
 .users { display: grid; grid-template-columns: 1fr 1.2fr; gap: 18px; align-items: start; }

@@ -54,6 +54,16 @@ CRUD completo persistido en `localStorage`:
   [`src/components/UsersMode.jsx`](src/components/UsersMode.jsx) (interfaz) y
   [`src/components/LoginForm.jsx`](src/components/LoginForm.jsx).
 
+### 🌐 API externa (randomuser.me)
+
+En la pestaña **Usuarios**, el botón **“Generar con API”** consume la API REST
+pública [randomuser.me](https://randomuser.me/) (`fetch` + `async/await`) para
+proponer un usuario nuevo con nombre español (`?nat=es`). Los datos externos se
+**sanean y validan** antes de usarse: el nombre de usuario se limpia de
+caracteres no permitidos, y si la contraseña generada no cumple las reglas se
+reemplaza por una segura generada localmente. Errores de red o respuestas
+inesperadas se muestran con mensajes claros (manejo de errores).
+
 ## 🚀 Puesta en marcha
 
 ```bash
