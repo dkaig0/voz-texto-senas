@@ -1,17 +1,25 @@
+// ============================================================================
+// LoginForm.jsx — PANTALLA DE INICIO DE SESIÓN.
+// Formulario controlado que valida credenciales contra localStorage.
+// Si las credenciales son correctas, avisa al padre (App) con onLogin(user).
+// ============================================================================
+
 import { useState } from 'react'
 import { verifyCredentials } from '../lib/users.js'
 
-// Pantalla de inicio de sesión. Valida credenciales contra localStorage.
 export default function LoginForm({ onLogin }) {
+  // Formulario "controlado": cada input vive en un estado de React.
   const [usuario, setUsuario] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState(null)
-  const [checking, setChecking] = useState(false)
+  const [error, setError] = useState(null) // mensaje de error visible
+  const [checking, setChecking] = useState(false) // true mientras se comprueba
 
+  // Esta función se ejecuta al enviar el formulario (botón Entrar o tecla Enter).
   async function handleSubmit(e) {
-    e.preventDefault()
+    e.preventDefault() // evita que el navegador recargue la página
     setError(null)
 
+    // Validación: no comprobar nada si falta algún campo.
     if (!usuario.trim() || !password) {
       setError('Ingresa usuario y contraseña.')
       return
@@ -19,12 +27,15 @@ export default function LoginForm({ onLogin }) {
 
     setChecking(true)
     try {
+      // AQUÍ se validan las credenciales (recalcula el hash y compara).
       const user = await verifyCredentials(usuario, password)
       if (!user) {
+        // Mensaje genérico a propósito: no revelamos si falló el usuario
+        // o la contraseña (buena práctica de seguridad).
         setError('Usuario o contraseña incorrectos.')
         return
       }
-      onLogin(user)
+      onLogin(user) // avisa a App para crear la sesión
     } finally {
       setChecking(false)
     }
@@ -52,13 +63,14 @@ export default function LoginForm({ onLogin }) {
           <label htmlFor="login-pass">Contraseña</label>
           <input
             id="login-pass"
-            type="password"
+            type="password" /* oculta lo escrito */
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             maxLength={30}
           />
 
+          {/* El error solo se pinta si existe */}
           {error && <p className="form-error">{error}</p>}
 
           <button className="btn btn-primary" type="submit" disabled={checking}>

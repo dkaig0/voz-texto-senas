@@ -1,6 +1,11 @@
+// ============================================================================
+// AlphabetMode.jsx — MODO ABECEDARIO (referencia visual).
+// Pinta las 27 tarjetas del abecedario dactilológico español recorriendo
+// la lista ALPHABET, con la Ñ resaltada y notas de uso.
+// ============================================================================
+
 import { ALPHABET, letterSrc } from '../lib/alphabet.js'
 
-// Modo Abecedario: referencia visual del dactilológico español (27 letras).
 export default function AlphabetMode() {
   return (
     <section className="panel">
@@ -9,17 +14,21 @@ export default function AlphabetMode() {
         Con estas 27 señas se deletrean nombres y palabras que no tienen seña
         propia. Son la base del Traductor.
       </p>
+      {/* AQUÍ se recorre el alfabeto: una tarjeta <figure> por letra */}
       <div className="alpha-grid">
         {ALPHABET.map((l) => (
           <figure key={l} className={'alpha-card' + (l === 'ñ' ? ' enye' : '')}>
             <div className="alpha-img-wrap">
+              {/* letterSrc devuelve la imagen (la Ñ reutiliza la de la N) */}
               <img src={letterSrc(l)} alt={`Seña de la letra ${l.toUpperCase()}`} />
+              {/* Solo la Ñ lleva la tilde animada encima */}
               {l === 'ñ' && <span className="tilde-mark small">〜</span>}
             </div>
             <figcaption>{l.toUpperCase()}</figcaption>
           </figure>
         ))}
       </div>
+      {/* Notas para entender el deletreo en español */}
       <div className="alpha-notes">
         <p>
           <strong>Ñ</strong> — se hace igual que la N, añadiendo un pequeño

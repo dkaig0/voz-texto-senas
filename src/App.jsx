@@ -1,3 +1,9 @@
+// ============================================================================
+// App.jsx — COMPONENTE RAÍZ de la aplicación.
+// Responsabilidades: 1) la sesión (login/logout), 2) crear el usuario demo
+// al arrancar, 3) la navegación entre los tres modos.
+// ============================================================================
+
 import { useEffect, useState } from 'react'
 import TranslatorMode from './components/TranslatorMode.jsx'
 import AlphabetMode from './components/AlphabetMode.jsx'
@@ -6,49 +12,62 @@ import LoginForm from './components/LoginForm.jsx'
 import { seedDefaultUser } from './lib/users.js'
 import { readJSON, writeJSON, removeKey } from './lib/storage.js'
 
+// Clave de localStorage donde se guarda la sesión activa.
 const SESSION_KEY = 'senas.sesion'
 
+// Las tres pestañas de la app (id interno + etiqueta visible).
 const MODES = [
   { id: 'translate', label: 'Traductor' },
   { id: 'alphabet', label: 'Abecedario' },
   { id: 'users', label: 'Usuarios' },
 ]
 
-// Solo datos NO sensibles en la sesión (nunca contraseñas ni hashes).
+// Validador de la sesión guardada. Seguridad: la sesión SOLO contiene datos
+// no sensibles (id, usuario, nombre) — nunca contraseñas ni hashes.
 const isSession = (d) =>
   d && typeof d.id === 'string' && typeof d.usuario === 'string'
 
 export default function App() {
+  // Estado: pestaña activa.
   const [mode, setMode] = useState('translate')
+  // Estado: false hasta que exista el usuario demo (evita parpadeos).
   const [ready, setReady] = useState(false)
+  // Estado: sesión actual. Se inicializa leyendo localStorage de forma
+  // segura (si está corrupta → null → pantalla de login).
   const [session, setSession] = useState(() => readJSON(SESSION_KEY, null, isSession))
 
-  // Al arrancar: garantiza que exista el usuario demo (test / test123).
+  // useEffect con [] = se ejecuta UNA vez al montar la app.
+  // AQUÍ se garantiza que exista el usuario demo (test / test123).
   useEffect(() => {
     seedDefaultUser().finally(() => setReady(true))
   }, [])
 
+  // Esta función guarda la sesión al iniciar sesión (solo datos no sensibles).
   function handleLogin(user) {
     const s = { id: user.id, usuario: user.usuario, nombre: user.nombre }
     writeJSON(SESSION_KEY, s)
     setSession(s)
   }
 
+  // Esta función cierra la sesión: borra localStorage y vuelve al login.
   function handleLogout() {
     removeKey(SESSION_KEY)
     setSession(null)
     setMode('translate')
   }
 
-  // Si edito mi propio usuario en el CRUD, la sesión se actualiza.
+  // Si en el CRUD edito MI PROPIO usuario, refresco la sesión visible.
   function handleSessionUserChange(user) {
     handleLogin(user)
   }
 
+  // Mientras se crea el usuario demo no se pinta nada (es instantáneo).
   if (!ready) return null
 
+  // Sin sesión → solo se muestra el formulario de login.
   if (!session) return <LoginForm onLogin={handleLogin} />
 
+  // Con sesión → la aplicación completa.
   return (
     <div className="app">
       <header className="app-header">
@@ -60,6 +79,7 @@ export default function App() {
           </div>
         </div>
 
+        {/* Navegación: un botón por modo; el activo se resalta con CSS */}
         <nav className="nav">
           {MODES.map((m) => (
             <button
@@ -72,6 +92,7 @@ export default function App() {
           ))}
         </nav>
 
+        {/* Sesión activa: nombre del usuario + botón salir */}
         <div className="session-box">
           <span className="session-user">{session.nombre || session.usuario}</span>
           <button className="btn btn-ghost" onClick={handleLogout}>
@@ -86,6 +107,7 @@ export default function App() {
         sin conexión (la voz necesita Chrome/Edge). Sin claves ni servidores.
       </div>
 
+      {/* Renderizado condicional: solo se monta el modo seleccionado */}
       <main className="container">
         {mode === 'translate' && <TranslatorMode />}
         {mode === 'alphabet' && <AlphabetMode />}

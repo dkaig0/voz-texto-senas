@@ -1,13 +1,20 @@
-// Grabación de micrófono y conversión a PCM mono de 16 kHz (Float32Array),
-// que es el formato que espera Whisper.
+// ============================================================================
+// audioRecord.js — Grabación de micrófono (PREPARACIÓN PARA AMPLIACIÓN).
+//
+// No se usa en la versión actual. Es la base para el dictado local con IA
+// (Whisper): graba el micrófono y convierte el audio a PCM mono de 16 kHz,
+// el formato que espera ese modelo.
+// ============================================================================
 
-// Crea un grabador sencillo sobre MediaRecorder.
+// Esta función crea un grabador sencillo sobre la API MediaRecorder.
+// Devuelve un objeto con start() / stop() / cancel().
 export function createRecorder() {
   let mediaRecorder = null
   let stream = null
-  let chunks = []
+  let chunks = [] // trozos de audio que va entregando el navegador
 
   return {
+    // Pide el micrófono y empieza a grabar.
     async start() {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       chunks = []
@@ -18,7 +25,7 @@ export function createRecorder() {
       mediaRecorder.start()
     },
 
-    // Detiene y devuelve el audio grabado como Blob.
+    // Detiene la grabación y devuelve el audio completo como Blob.
     stop() {
       return new Promise((resolve, reject) => {
         if (!mediaRecorder || mediaRecorder.state === 'inactive') {
@@ -44,6 +51,7 @@ export function createRecorder() {
     },
   }
 
+  // Libera el micrófono (apaga la lucecita de "grabando" del navegador).
   function cleanup() {
     if (stream) {
       stream.getTracks().forEach((t) => t.stop())
@@ -53,18 +61,21 @@ export function createRecorder() {
   }
 }
 
-// Decodifica un Blob de audio y lo re-muestrea a mono 16 kHz.
+// Esta función convierte el Blob grabado a PCM mono de 16 kHz (Float32Array).
+// Pasos: decodificar el audio → re-muestrearlo con OfflineAudioContext.
 export async function blobToPCM16k(blob) {
   const arrayBuffer = await blob.arrayBuffer()
   const AC = window.AudioContext || window.webkitAudioContext
   const ac = new AC()
   let decoded
   try {
-    decoded = await ac.decodeAudioData(arrayBuffer)
+    decoded = await ac.decodeAudioData(arrayBuffer) // audio comprimido → muestras
   } finally {
     ac.close().catch(() => {})
   }
 
+  // Re-muestreo: se "reproduce" el audio dentro de un contexto offline a
+  // 16000 Hz y 1 canal, y el resultado es el audio convertido.
   const targetRate = 16000
   const length = Math.max(1, Math.ceil(decoded.duration * targetRate))
   const oc = new OfflineAudioContext(1, length, targetRate)
@@ -73,5 +84,5 @@ export async function blobToPCM16k(blob) {
   source.connect(oc.destination)
   source.start()
   const rendered = await oc.startRendering()
-  return rendered.getChannelData(0)
+  return rendered.getChannelData(0) // canal único con las muestras
 }
